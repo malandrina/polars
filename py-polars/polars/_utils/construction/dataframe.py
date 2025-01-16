@@ -453,6 +453,7 @@ def sequence_to_pydf(
     strict: bool = True,
     orient: Orientation | None = None,
     infer_schema_length: int | None = N_INFER_DEFAULT,
+    nan_to_null: bool = False,
 ) -> PyDataFrame:
     """Construct a PyDataFrame from a sequence."""
     if not data:
@@ -466,6 +467,7 @@ def sequence_to_pydf(
         strict=strict,
         orient=orient,
         infer_schema_length=infer_schema_length,
+        nan_to_null=nan_to_null,
     )
 
 
@@ -479,6 +481,7 @@ def _sequence_to_pydf_dispatcher(
     strict: bool = True,
     orient: Orientation | None,
     infer_schema_length: int | None,
+    nan_to_null: bool = False,
 ) -> PyDataFrame:
     # note: ONLY python-native data should participate in singledispatch registration
     # via top-level decorators, otherwise we have to import the associated module.
@@ -491,6 +494,7 @@ def _sequence_to_pydf_dispatcher(
         "schema_overrides": schema_overrides,
         "strict": strict,
         "orient": orient,
+        "nan_to_null": nan_to_null,
         "infer_schema_length": infer_schema_length,
     }
     to_pydf: Callable[..., PyDataFrame]
@@ -544,6 +548,7 @@ def _sequence_of_sequence_to_pydf(
     strict: bool,
     orient: Orientation | None,
     infer_schema_length: int | None,
+    nan_to_null: bool = False,
 ) -> PyDataFrame:
     if orient is None:
         if schema is None:
@@ -657,6 +662,7 @@ def _sequence_of_tuple_to_pydf(
     strict: bool,
     orient: Orientation | None,
     infer_schema_length: int | None,
+    nan_to_null: bool = False,
 ) -> PyDataFrame:
     # infer additional meta information if namedtuple
     if is_namedtuple(first_element.__class__) or is_sqlalchemy(first_element):
