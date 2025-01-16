@@ -608,6 +608,7 @@ def _sequence_of_sequence_to_pydf(
                 element,
                 dtype=schema_overrides.get(column_names[i]),
                 strict=strict,
+                nan_to_null=nan_to_null,
             )._s
             for i, element in enumerate(data)
         ]
