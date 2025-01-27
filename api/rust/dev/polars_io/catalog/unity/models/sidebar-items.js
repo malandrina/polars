@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["DataSourceFormat","TableType"],"struct":["CatalogInfo","ColumnInfo","SchemaInfo","TableInfo"]};
