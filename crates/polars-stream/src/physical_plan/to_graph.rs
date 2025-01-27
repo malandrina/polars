@@ -221,16 +221,34 @@ fn to_graph_rec<'a>(
                     nodes::io_sinks::ipc::IpcSinkNode::new(input_schema, path, ipc_writer_options)?,
                     [(input_key, input.port)],
                 ),
-                #[cfg(feature = "ipc")]
-                FileType::Parquet(ipc_writer_options) => ctx.graph.add_node(
+                #[cfg(feature = "json")]
+                FileType::Json(_) => ctx.graph.add_node(
+                    nodes::io_sinks::json::NDJsonSinkNode::new(path)?,
+                    [(input_key, input.port)],
+                ),
+                #[cfg(feature = "parquet")]
+                FileType::Parquet(parquet_writer_options) => ctx.graph.add_node(
                     nodes::io_sinks::parquet::ParquetSinkNode::new(
                         input_schema,
                         path,
-                        ipc_writer_options,
+                        parquet_writer_options,
                     )?,
                     [(input_key, input.port)],
                 ),
-                _ => todo!(),
+                #[cfg(feature = "csv")]
+                FileType::Csv(csv_writer_options) => ctx.graph.add_node(
+                    nodes::io_sinks::csv::CsvSinkNode::new(input_schema, path, csv_writer_options)?,
+                    [(input_key, input.port)],
+                ),
+                #[cfg(not(any(
+                    feature = "csv",
+                    feature = "parquet",
+                    feature = "json",
+                    feature = "ipc"
+                )))]
+                _ => {
+                    panic!("activate source feature")
+                },
             }
         },
 
@@ -391,7 +409,6 @@ fn to_graph_rec<'a>(
                         nodes::io_sources::ipc::IpcSourceNode::new(
                             scan_sources,
                             file_info,
-                            hive_parts,
                             predicate,
                             options,
                             cloud_options,

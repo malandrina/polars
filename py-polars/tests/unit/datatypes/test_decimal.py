@@ -638,3 +638,43 @@ def test_shift_over_12957() -> None:
     )
     assert result["x"].to_list() == [None, D("1.1"), None, D("2.2")]
     assert result["y"].to_list() == [None, 1, None, 2]
+
+
+def test_fill_null() -> None:
+    s = pl.Series("a", [D("1.2"), None, D("1.4")])
+
+    assert s.fill_null(D("0.0")).to_list() == [D("1.2"), D("0.0"), D("1.4")]
+    assert s.fill_null(strategy="zero").to_list() == [D("1.2"), D("0.0"), D("1.4")]
+    assert s.fill_null(strategy="max").to_list() == [D("1.2"), D("1.4"), D("1.4")]
+    assert s.fill_null(strategy="min").to_list() == [D("1.2"), D("1.2"), D("1.4")]
+    assert s.fill_null(strategy="one").to_list() == [D("1.2"), D("1.0"), D("1.4")]
+    assert s.fill_null(strategy="forward").to_list() == [D("1.2"), D("1.2"), D("1.4")]
+    assert s.fill_null(strategy="backward").to_list() == [D("1.2"), D("1.4"), D("1.4")]
+    assert s.fill_null(strategy="mean").to_list() == [D("1.2"), D("1.3"), D("1.4")]
+
+
+def test_unique() -> None:
+    ser = pl.Series([D("1.1"), D("1.1"), D("2.2")])
+
+    assert ser.unique().to_list() == [D("1.1"), D("2.2")]
+    assert ser.n_unique() == 2
+    assert ser.arg_unique().to_list() == [0, 2]
+
+
+def test_groupby_agg_single_element_11232() -> None:
+    data = {"g": [-1], "decimal": [-1]}
+    schema = {"g": pl.Int64(), "decimal": pl.Decimal(38, 0)}
+    result = (
+        pl.LazyFrame(data, schema=schema)
+        .group_by("g", maintain_order=True)
+        .agg(pl.col("decimal").min())
+        .collect()
+    )
+    expected = pl.DataFrame(data, schema=schema)
+    assert_frame_equal(result, expected)
+
+
+def test_decimal_from_large_ints_9084() -> None:
+    numbers = [2963091539321097135000000000, 25658709114149718824803874]
+    s = pl.Series(numbers, dtype=pl.Decimal)
+    assert s.to_list() == [D(n) for n in numbers]
