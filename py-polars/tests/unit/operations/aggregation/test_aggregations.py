@@ -16,6 +16,24 @@ if TYPE_CHECKING:
     from polars._typing import PolarsDataType
 
 
+def test_varying_quantile_by_group() -> None:
+    df = pl.DataFrame(
+        {
+            "value": [1, 2, 1, 2],
+            "quantile": [0, 0, 1, 1],
+        }
+    )
+    expected_result = pl.DataFrame(
+        {
+            "quantile": [0, 1],
+            "value": [1.0, 2.0],
+        }
+    )
+
+    result = df.group_by(pl.col.quantile).agg(pl.col.value.quantile(pl.col.quantile.first()))
+
+    assert_frame_equal(result, expected_result)
+
 def test_quantile_expr_input() -> None:
     df = pl.DataFrame({"a": [1, 2, 3, 4, 5], "b": [0.0, 0.0, 0.3, 0.2, 0.0]})
 
